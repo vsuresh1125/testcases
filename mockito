@@ -1,4 +1,42 @@
+----------'
+import static org.mockito.Mockito.*;
 
+import com.zaxxer.hikari.HikariDataSource;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+
+import javax.sql.DataSource;
+
+public class PCSOConfigTest {
+
+    @Test
+    public void testPcsoDataSourceBean() {
+        // Mock DataSourceProperties
+        DataSourceProperties dataSourceProperties = mock(DataSourceProperties.class);
+
+        // Mock DataSourceBuilder
+        DataSourceBuilder dataSourceBuilder = mock(DataSourceBuilder.class);
+        HikariDataSource hikariDataSource = mock(HikariDataSource.class);
+
+        // Mock behavior of initializeDataSourceBuilder()
+        when(dataSourceProperties.initializeDataSourceBuilder()).thenReturn(dataSourceBuilder);
+
+        // Mock behavior of builder type() and build()
+        when(dataSourceBuilder.type(HikariDataSource.class)).thenReturn(dataSourceBuilder);
+        when(dataSourceBuilder.build()).thenReturn(hikariDataSource);
+
+        // Call the method under test
+        DataSource dataSource = dataSourceProperties.initializeDataSourceBuilder()
+                .type(HikariDataSource.class)
+                .build();
+
+        // Assertions
+        assertNotNull(dataSource);
+        assertTrue(dataSource instanceof HikariDataSource);
+    }
+}
+----------'z
 package com.example.test;
 
 import static org.junit.jupiter.api.Assertions.*;
