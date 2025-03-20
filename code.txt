@@ -1,0 +1,119 @@
+
+
+	@Operation(summary = "Returns list of all the purchase orders for table view UI.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved purchase orders.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = GetPurchaseOrderResponse.class))),
+			@ApiResponse(responseCode = "400", description = "Bad Request"),
+			@ApiResponse(responseCode = "404", description = "The resource you were trying to reach is not found") })
+	@PostMapping("/amortizationpurchaseorders")
+	public ResponseEntity<Object> getAllAmortizationPurchaseOrders(@RequestBody(required = false) QueryPurchaseOrderRequest request) {
+		ApplicationErrors applicationErrors = new ApplicationErrors();
+		if(request != null) {
+			if (request.getItemsPerPage() != null && request.getItemsPerPage() <= 0) {
+				applicationErrors
+						.addErrorMessage(DataloaderMessageConstants.DATA_LOADER_DATAENTRY_ITEMPERPAGE_IS_INVALID.getCode());
+			}
+			if (request.getPageNumber() != null && request.getPageNumber() <= 0) {
+				applicationErrors
+						.addErrorMessage(DataloaderMessageConstants.DATA_LOADER_DATAENTRY_PAGENUMBER_IS_INVALID.getCode());
+			}
+			applicationErrors.raiseExceptionIfHasErrors();
+			if (request.getRetrieveInactive() == null) {
+				request.setRetrieveInactive(false);
+			}
+		}
+		
+		List<PurchaseOrderDL> purchaseOrderList = dataloaderService.getpurchaseOrderList(request);
+		System.out.println("list of purchaseOrderDL List<PurchaseOrderDL>:::"+purchaseOrderList);
+		Map<String, FieldDL> all_column_header = dataloaderService.getAll_FieldName_FieldKeyMap();
+		if (purchaseOrderList != null) {
+			List<Collection<FieldDL>> resultRows = purchaseOrderList.stream().map(v-> v.getColumnName_FieldsMap().values()).collect(Collectors.toList());
+			 List<Collection<FieldDL>> allAmortizationPurchaseOrders = dataloaderService.getAllAmortizationPurchaseOrders(resultRows,all_column_header);
+			return new GetPurchaseOrderResponse(allAmortizationPurchaseOrders, all_column_header).build();
+		} else {
+			List<Collection<FieldDL>> allAmortizationPurchaseOrders = dataloaderService.getAllAmortizationPurchaseOrders(null,all_column_header);
+			return new GetPurchaseOrderResponse(null, all_column_header).build();
+		}
+	}
+
+
+
+
+
+
+@Override
+	public List<Collection<FieldDL>> getAllAmortizationPurchaseOrders(List<Collection<FieldDL>> resultRows, Map<String, FieldDL> all_column_header) {
+		LocalDate adjustmentPOStartDate = null;
+		LocalDate adjustmentPOEndDate = null;
+		LocalDate CurrentAmortRate = null;
+    
+    for (Collection<FieldDL> resultRow : resultRows){
+			List<FieldDL> resultRowList = new ArrayList(resultRow);
+			List<FieldDL> tempResultRowList = new ArrayList();
+			for (FieldDL fieldDL : tempResultRowList) {
+				if (fieldDL.getKey().equals(PurchaseOrderLoaderUtil.FIELD_KEY_ADJUSTED_START_DATE)) {
+					adjustmentPOStartDate = (LocalDate) fieldDL.getValue();
+
+				}
+				if (fieldDL.getKey().equals(PurchaseOrderLoaderUtil.FIELD_KEY_ADJUSTED_END_DATE)) {
+					adjustmentPOEndDate = (LocalDate) fieldDL.getValue();
+
+				}
+				if (fieldDL.getKey().equals(PurchaseOrderLoaderUtil.FIELD_KEY_ADJUSTED_END_DATE)) {
+					CurrentAmortRate = (LocalDate) fieldDL.getValue();
+
+				}
+				LocalDate startOfFinancialYear = getStartOfFinancialYear(date);
+				LocalDate endOfFinancialYear = getEndOfFinancialYear(date);
+				LocalDate plusMonths = getEndOfFinancialYear(date).plusMonths(60);
+				
+				System.out.println("getting aditional sixty months - plusMonths(60)" + plusMonths);
+
+				DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMM-yyyy");
+				String format = startOfFinancialYear.format(dtf);
+				System.out.println(" header format MMM-yyyy" + format);
+				Map<String, Object> hm = new LinkedHashMap<>();
+
+				LocalDate amortStartMonth = startOfFinancialYear;
+				LocalDate amortEndMonth = plusMonths;
+
+				if (adjustmentPOStartDate != null && adjustmentPOStartDate.isAfter(startOfFinancialYear))
+					amortStartMonth = adjustmentPOStartDate;
+				if ( adjustmentPOEndDate != null && adjustmentPOEndDate.isBefore(endOfFinancialYear))
+					amortEndMonth = adjustmentPOEndDate;
+
+				for (LocalDate date = startOfFinancialYear; date.isBefore(plusMonths); date = date.plusMonths(1)) {
+
+					if (date.isBefore(amortStartMonth) || date.isAfter(amortEndMonth)) {
+						String format1 = date.format(dtf);
+						hm.put(format1, "");
+
+					} else {
+						String format1 = date.format(dtf);
+						hm.put(format1, CurrentAmortRate);
+					}
+				}
+				System.out.println(hm);
+				FieldDL dynamicFieldDL = new  FieldDL();
+				dynamicFieldDL.setKey("dynamic_fields");
+				dynamicFieldDL.setValue(hm);
+				tempResultRowList.add(dynamicFieldDL);
+
+			}
+
+		resultRowList.addAll(tempResultRowList);
+    }
+
+		return resultRows;
+
+	}
+
+	private static LocalDate getStartOfFinancialYear(LocalDate date) {
+		LocalDate candidate = date.with(FINANCIAL_START);
+		return candidate.isAfter(date) ? candidate.minusYears(1) : candidate;
+	}
+
+	private static LocalDate getEndOfFinancialYear(LocalDate date) {
+		LocalDate candidate = date.with(FINANCIAL_END);
+		return candidate.isAfter(date) ? candidate : candidate.plusYears(1);
+	}
