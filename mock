@@ -1,1 +1,34 @@
 
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(SpringExtension.class)
+@SpringBootTest
+public class PCSOConfigTest {
+
+    @Autowired
+    private PCSOConfig pcsoConfig;
+
+    @Autowired
+    private ApplicationContext context;
+
+    @Test
+    public void testPcsoEntityManagerFactoryBean() {
+        LocalContainerEntityManagerFactoryBean emf = (LocalContainerEntityManagerFactoryBean)
+                context.getBean("pcsoEntityManagerFactory");
+        
+        assertNotNull(emf, "EntityManagerFactory Bean should not be null");
+
+        assertEquals("orion_pcso_db", emf.getPersistenceUnitName());
+
+        emf.setDataSource(pcsoConfig.pcsoDataSource());
+        assertNotNull(emf.getDataSource(), "DataSource should not be null");
+    }
+}
