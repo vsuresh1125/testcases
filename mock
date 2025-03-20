@@ -1,4 +1,98 @@
+......
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.dfs.callcenter.card.platform.common.exception.WebResponseServerException;
+import com.dfs.callcenter.card.platform.common.models.AccountIdentifiersVO;
+import com.dfs.callcenter.card.platform.common.models.CardAccountNumberLookupInputVO;
+import com.dfs.callcenter.card.platform.common.models.CardAccountNumberLookupOutputVO;
+import com.dfs.callcenter.card.platform.resilience.CardopsWebClient;
+
+import io.github.resilience4j.retry.annotation.Retry;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
+
+public class CardopsAcctNumberLookupImplTest {
+
+    @Mock
+    private CardopsWebClient webClient;
+
+    @InjectMocks
+    private CardopsAcctNumberLookupImpl cardopsAcctNumberLookup;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetAccountNumberByAcctKeyAndSeqNum_Success() throws WebResponseServerException {
+        // Arrange
+        AccountIdentifiersVO accountIdentifiersVO = new AccountIdentifiersVO();
+        accountIdentifiersVO.setAccountKey("12345");
+        accountIdentifiersVO.setSequenceNumber("001");
+
+        CardAccountNumberLookupOutputVO mockOutputVO = new CardAccountNumberLookupOutputVO();
+        mockOutputVO.setAccountNumber("98765");
+
+        ResponseEntity<Object> mockResponse = ResponseEntity.ok(mockOutputVO);
+
+        when(webClient.executePostSynchronous(
+                any(), 
+                any(CardAccountNumberLookupInputVO.class), 
+                eq(Object.class)))
+                .thenReturn(mockResponse);
+
+        // Act
+        CardAccountNumberLookupOutputVO result = cardopsAcctNumberLookup.getAccountNumberByAcctKeyAndSeqNum(accountIdentifiersVO);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("98765", result.getAccountNumber());
+    }
+
+    @Test
+    public void testGetAccountNumberByAcctKeyAndSeqNum_Exception() {
+        // Arrange
+        AccountIdentifiersVO accountIdentifiersVO = new AccountIdentifiersVO();
+        accountIdentifiersVO.setAccountKey("12345");
+        accountIdentifiersVO.setSequenceNumber("001");
+
+        when(webClient.executePostSynchronous(
+                any(), 
+                any(CardAccountNumberLookupInputVO.class), 
+                eq(Object.class)))
+                .thenThrow(new WebResponseServerException("Service Unavailable"));
+
+        // Act & Assert
+        WebResponseServerException exception = assertThrows(
+                WebResponseServerException.class,
+                () -> cardopsAcctNumberLookup.getAccountNumberByAcctKeyAndSeqNum(accountIdentifiersVO)
+        );
+
+        assertEquals("Service Unavailable", exception.getMessage());
+    }
+
+    @Test
+    public void testRetryFallbackForGetAccountNumberByAcctKeyAndSeqNum() {
+        // Arrange
+        Exception exception = new Exception("Retry failure");
+
+        // Act & Assert
+        Exception thrownException = assertThrows(
+                Exception.class,
+                () -> cardopsAcctNumberLookup.retryFallbackForGetAccountNumberByAcctKeyAndSeqNum(exception)
+        );
+
+        assertEquals("Retry failure", thrownException.getMessage());
+    }
+}
+.......
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
