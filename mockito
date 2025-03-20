@@ -1,1 +1,99 @@
 
+package com.example.test;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.zaxxer.hikari.HikariDataSource;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.core.env.Environment;
+import org.springframework.orm.jpa.JpaVendorAdapter;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.orm.jpa.JpaTransactionManager;
+
+import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
+import java.util.Properties;
+
+@ExtendWith(MockitoExtension.class)
+public class PCSOConfigTest {
+
+    @InjectMocks
+    private PCSOConfig pcsoConfig;
+
+    @Mock
+    private Environment environment;
+
+    @Mock
+    private DataSourceProperties dataSourceProperties;
+
+    @Mock
+    private JpaVendorAdapter jpaVendorAdapter;
+
+    @Mock
+    private EntityManagerFactory entityManagerFactory;
+
+    @BeforeEach
+    void setUp() {
+        when(environment.getRequiredProperty("spring.jpa.properties.hibernate.show-sql")).thenReturn("true");
+        when(environment.getRequiredProperty("spring.jpa.properties.hibernate.dialect")).thenReturn("org.hibernate.dialect.H2Dialect");
+        when(environment.getRequiredProperty("spring.jpa.properties.hibernate.format_sql")).thenReturn("true");
+    }
+
+    // 1. Test DataSourceProperties Bean Creation
+    @Test
+    public void testPcsoDataSourcePropertiesBean() {
+        DataSourceProperties properties = pcsoConfig.pcsoDataSourceProperties();
+        assertNotNull(properties);
+    }
+
+    // 2. Test DataSource Bean Creation
+    @Test
+    public void testPcsoDataSourceBean() {
+        when(dataSourceProperties.initializeDataSourceBuilder())
+                .thenReturn(new DataSourceProperties().initializeDataSourceBuilder().type(HikariDataSource.class));
+
+        DataSource dataSource = pcsoConfig.pcsoDataSource();
+        assertNotNull(dataSource);
+        assertTrue(dataSource instanceof HikariDataSource);
+    }
+
+    // 3. Test EntityManagerFactory Bean Creation
+    @Test
+    public void testPcsoEntityManagerFactoryBean() {
+        LocalContainerEntityManagerFactoryBean emf = pcsoConfig.pcsoEntityManagerFactory(environment);
+        assertNotNull(emf);
+        assertEquals("orion_pcso_db", emf.getPersistenceUnitName());
+
+        emf.setDataSource(pcsoConfig.pcsoDataSource());
+        assertNotNull(emf.getDataSource());
+    }
+
+    // 4. Test JPA Properties Configuration
+    @Test
+    public void testJpaPropertiesConfiguration() {
+        Properties jpaProperties = new Properties();
+        jpaProperties.put("show_sql", environment.getRequiredProperty("spring.jpa.properties.hibernate.show-sql"));
+        jpaProperties.put("hibernate.dialect", environment.getRequiredProperty("spring.jpa.properties.hibernate.dialect"));
+        jpaProperties.put("hibernate.format_sql", environment.getRequiredProperty("spring.jpa.properties.hibernate.format_sql"));
+
+        assertEquals("true", jpaProperties.getProperty("show_sql"));
+        assertEquals("org.hibernate.dialect.H2Dialect", jpaProperties.getProperty("hibernate.dialect"));
+        assertEquals("true", jpaProperties.getProperty("hibernate.format_sql"));
+    }
+
+    // 5. Test TransactionManager Bean Creation
+    @Test
+    public void testPcsoTransactionManagerBean() {
+        PlatformTransactionManager transactionManager = pcsoConfig.pcsoTransactionManager(entityManagerFactory);
+        assertNotNull(transactionManager);
+        assertTrue(transactionManager instanceof JpaTransactionManager);
+    }
+}
