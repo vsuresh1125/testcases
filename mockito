@@ -1,1 +1,83 @@
+import com.dfs.callcenter.card.memos.utilities.MemosDateUtility;
+import com.dfs.callcenter.card.memos.vo.MemoOutputVO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+class MemosDateUtilityTest {
+
+    @BeforeEach
+    void setUp() {
+        // No need to instantiate MemosDateUtility since it's a utility class
+    }
+
+    @Test
+    void testGetFormattedDate_Success() {
+        // Mocking MemoOutputVO
+        MemoOutputVO memo = mock(MemoOutputVO.class);
+        when(memo.getMemoDate()).thenReturn("20250321");
+        when(memo.getMemoTime()).thenReturn("123000");
+
+        try (MockedStatic<TimeZone> timeZoneMock = mockStatic(TimeZone.class)) {
+            TimeZone estZone = TimeZone.getTimeZone("EST");
+            TimeZone utcZone = TimeZone.getTimeZone("UTC");
+
+            timeZoneMock.when(() -> TimeZone.getTimeZone("EST")).thenReturn(estZone);
+            timeZoneMock.when(() -> TimeZone.getTimeZone("UTC")).thenReturn(utcZone);
+
+            // Call the method
+            String result = MemosDateUtility.getFormattedDate(memo);
+
+            // Expected formatted date in UTC
+            assertEquals("2025-03-21T17:30:00Z", result);
+        }
+    }
+
+    @Test
+    void testGetFormattedDate_NullMemoDateOrTime() {
+        MemoOutputVO memo = mock(MemoOutputVO.class);
+
+        // Case 1: Null Memo Date
+        when(memo.getMemoDate()).thenReturn(null);
+        when(memo.getMemoTime()).thenReturn("123000");
+        assertEquals("", MemosDateUtility.getFormattedDate(memo));
+
+        // Case 2: Null Memo Time
+        when(memo.getMemoDate()).thenReturn("20250321");
+        when(memo.getMemoTime()).thenReturn(null);
+        assertEquals("", MemosDateUtility.getFormattedDate(memo));
+
+        // Case 3: Both Null
+        when(memo.getMemoDate()).thenReturn(null);
+        when(memo.getMemoTime()).thenReturn(null);
+        assertEquals("", MemosDateUtility.getFormattedDate(memo));
+    }
+
+    @Test
+    void testGetFormattedDate_ParseException() {
+        MemoOutputVO memo = mock(MemoOutputVO.class);
+
+        // Invalid date-time format that causes ParseException
+        when(memo.getMemoDate()).thenReturn("invalidDate");
+        when(memo.getMemoTime()).thenReturn("123000");
+
+        // The method should return an empty string when parsing fails
+        assertEquals("", MemosDateUtility.getFormattedDate(memo));
+    }
+
+    @Test
+    void testPrivateConstructor() throws Exception {
+        // Testing private constructor for coverage
+        var constructor = MemosDateUtility.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        constructor.newInstance();
+    }
+}
