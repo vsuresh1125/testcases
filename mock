@@ -1,1 +1,55 @@
 
+ import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+class QuickNotesUtilityTest {
+
+    @InjectMocks
+    private QuickNotesUtility quickNotesUtility;
+
+    @Mock
+    private Map<String, String> namespace;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testGetNamespace_ReturnsEmptyMap() {
+        assertEquals(0, quickNotesUtility.getNamespace().size());
+    }
+
+    @Test
+    void testGetSubjectType_CSE_ReturnsC() {
+        String result = quickNotesUtility.GetSubjectType("CSE");
+        assertEquals("C", result);
+    }
+
+    @Test
+    void testGetSubjectType_SEC_ReturnsS() {
+        String result = quickNotesUtility.GetSubjectType("SEC");
+        assertEquals("S", result);
+    }
+
+    @Test
+    void testGetSubjectType_Unknown_ReturnsC() {
+        String result = quickNotesUtility.GetSubjectType("XYZ");
+        assertEquals("C", result);
+    }
+
+    @Test
+    void testGetSubjectType_Null_ReturnsC() {
+        String result = quickNotesUtility.GetSubjectType(null);
+        assertEquals("C", result);
+    }
+}
