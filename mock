@@ -1,4 +1,37 @@
+......
+import static org.mockito.Mockito.*;
 
+import javax.sql.DataSource;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+
+public class PCSOConfigTest {
+
+    @Test
+    public void testPcsoDataSource() {
+        // Arrange
+        DataSourceProperties mockProperties = mock(DataSourceProperties.class);
+        DataSourceBuilder<?> mockBuilder = mock(DataSourceBuilder.class);
+        DataSource mockDataSource = mock(DataSource.class);
+
+        // Correctly mock the return of initializeDataSourceBuilder()
+        when(mockProperties.initializeDataSourceBuilder()).thenReturn((DataSourceBuilder) mockBuilder);
+        
+        // Mock type and build methods correctly
+        when(mockBuilder.type(HikariDataSource.class)).thenReturn((DataSourceBuilder) mockBuilder);
+        when(mockBuilder.build()).thenReturn(mockDataSource);
+
+        // Act
+        DataSource dataSource = mockProperties.initializeDataSourceBuilder()
+                                               .type(HikariDataSource.class)
+                                               .build();
+
+        // Assert
+        assertNotNull(dataSource, "The DataSource should not be null");
+    }
+}
+.......
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
