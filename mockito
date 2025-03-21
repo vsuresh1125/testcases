@@ -1,1 +1,23 @@
 
+public class MemosDateUtility {
+
+    public static String getFormattedDate(MemoOutputVO memo, String dateFormat, String timeZone) {
+        String dateTime = memo.getMemoDate() + "T" + memo.getMemoTime();
+        return formatDate(dateTime, dateFormat, timeZone);
+    }
+
+    private static String formatDate(String dateTime, String dateFormat, String timeZone) {
+        try {
+            // Parse input date
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            LocalDateTime localDateTime = LocalDateTime.parse(dateTime, inputFormatter);
+
+            // Format to desired format and time zone
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern(dateFormat);
+            return localDateTime.atZone(ZoneId.of(timeZone)).format(outputFormatter);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error formatting date", e);
+        }
+    }
+}
