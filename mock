@@ -1,1 +1,98 @@
 
+package com.dfs.callcenter.card.memos.utilities;
+
+import com.discoverfinancials.memoservice.ao.MemoOutputVO;
+import com.dfs.callcenter.card.memos.constants.Constants;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class MemosDateUtilityTest {
+
+    @Test
+    void testGetFormattedDateValidMemo() throws ParseException {
+        MemoOutputVO memo = mock(MemoOutputVO.class);
+        when(memo.getMemoDate()).thenReturn("20240315");
+        when(memo.getMemoTime()).thenReturn("123456");
+
+        String result = MemosDateUtility.getFormattedDate(memo);
+
+        // Prepare expected formatted date
+        SimpleDateFormat originalFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        originalFormat.setTimeZone(TimeZone.getTimeZone("CST"));
+        Date date = originalFormat.parse("20240315123456");
+
+        SimpleDateFormat expectedFormat = new SimpleDateFormat(Constants.ISO_8601_DATE_FORMAT);
+        expectedFormat.setTimeZone(TimeZone.getTimeZone(Constants.UTC));
+        String expectedDate = expectedFormat.format(date);
+
+        assertEquals(expectedDate, result, "Expected properly formatted date in UTC.");
+    }
+
+    @Test
+    void testGetFormattedDateWithNullMemoDate() {
+        MemoOutputVO memo = mock(MemoOutputVO.class);
+        when(memo.getMemoDate()).thenReturn(null);
+        when(memo.getMemoTime()).thenReturn("123456");
+
+        String result = MemosDateUtility.getFormattedDate(memo);
+        assertEquals("", result, "Expected empty string for null memo date.");
+    }
+
+    @Test
+    void testGetFormattedDateWithNullMemoObject() {
+        String result = MemosDateUtility.getFormattedDate(null);
+        assertEquals("", result, "Expected empty string for null memo object.");
+    }
+
+    @Test
+    void testGetFormattedDateWithParseException() {
+        MemoOutputVO memo = mock(MemoOutputVO.class);
+        when(memo.getMemoDate()).thenReturn("invalid");
+        when(memo.getMemoTime()).thenReturn("data");
+
+        String result = MemosDateUtility.getFormattedDate(memo);
+        assertEquals("", result, "Expected empty string when parse exception occurs.");
+    }
+
+    @Test
+    void testStringToBooleanWithYes() {
+        assertTrue(MemosDateUtility.stringToBoolean("YES"), "Expected true for input 'YES'");
+    }
+
+    @Test
+    void testStringToBooleanWithY() {
+        assertTrue(MemosDateUtility.stringToBoolean("Y"), "Expected true for input 'Y'");
+    }
+
+    @Test
+    void testStringToBooleanWithTrue() {
+        assertTrue(MemosDateUtility.stringToBoolean("true"), "Expected true for input 'true'");
+    }
+
+    @Test
+    void testStringToBooleanWithNull() {
+        assertFalse(MemosDateUtility.stringToBoolean(null), "Expected false for null input.");
+    }
+
+    @Test
+    void testStringToBooleanWithRandomValue() {
+        assertFalse(MemosDateUtility.stringToBoolean("unknown"), "Expected false for unknown value.");
+    }
+
+    @Test
+    void testBooleanToCharWithTrue() {
+        assertEquals("Y", MemosDateUtility.booleanToChar(true), "Expected 'Y' for true value.");
+    }
+
+    @Test
+    void testBooleanToCharWithFalse() {
+        assertEquals("N", MemosDateUtility.booleanToChar(false), "Expected 'N' for false value.");
+    }
+}
