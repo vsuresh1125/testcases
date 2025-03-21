@@ -1,4 +1,30 @@
+....
+package com.dfs.callcenter.card.memos;
 
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.boot.SpringApplication;
+
+import static org.mockito.Mockito.*;
+
+class MemosApiApplicationTest {
+
+    @Test
+    void testMainMethod() {
+        // Mocking SpringApplication.run to verify it's called
+        try (MockedStatic<SpringApplication> mockedSpringApplication = mockStatic(SpringApplication.class)) {
+            
+            // Calling main method
+            MemosApiApplication.main(new String[]{});
+
+            // Verify that SpringApplication.run is called with the correct arguments
+            mockedSpringApplication.verify(() -> 
+                SpringApplication.run(MemosApiApplication.class, new String[]{})
+            );
+        }
+    }
+}
+....
  import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
