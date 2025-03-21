@@ -1,1 +1,19 @@
 
+import org.springframework.test.util.ReflectionTestUtils;
+
+@Test
+void testGetFormattedDate_Success() {
+    MemoOutputVO memo = mock(MemoOutputVO.class);
+    when(memo.getMemoDate()).thenReturn("2025-03-21");
+    when(memo.getMemoTime()).thenReturn("17:30:00");
+
+    // Set constants temporarily using ReflectionTestUtils
+    ReflectionTestUtils.setField(Constants.class, "ISO_8601_DATE_FORMAT", "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    ReflectionTestUtils.setField(Constants.class, "UTC", "UTC");
+
+    // Call the method under test
+    String result = MemosDateUtility.getFormattedDate(memo);
+
+    // Expected date format (converted to UTC)
+    assertEquals("2025-03-21T17:30:00Z", result);
+}
