@@ -1,1 +1,52 @@
+import com.dfs.callcenter.card.memos.utilities.MemosDateUtility;
+import com.dfs.callcenter.card.memos.vo.MemoOutputVO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+class MemosDateUtilityTest {
+
+    @BeforeEach
+    void setUp() {
+        // Nothing to initialize because MemosDateUtility is a utility class
+    }
+
+    @Test
+    void testGetFormattedDate_Success() {
+        // Mock MemoOutputVO
+        MemoOutputVO memo = mock(MemoOutputVO.class);
+        when(memo.getMemoDate()).thenReturn("20250321");
+        when(memo.getMemoTime()).thenReturn("123000");
+
+        try (MockedStatic<TimeZone> timeZoneMock = mockStatic(TimeZone.class)) {
+            // Mocking TimeZone behavior
+            TimeZone estZone = TimeZone.getTimeZone("EST");
+            TimeZone utcZone = TimeZone.getTimeZone("UTC");
+
+            timeZoneMock.when(() -> TimeZone.getTimeZone("EST")).thenReturn(estZone);
+            timeZoneMock.when(() -> TimeZone.getTimeZone("UTC")).thenReturn(utcZone);
+
+            // Correct the format expected from Constants
+            try (MockedStatic<Constants> constantsMock = mockStatic(Constants.class)) {
+                constantsMock.when(() -> Constants.ISO_8601_DATE_FORMAT)
+                        .thenReturn("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                constantsMock.when(() -> Constants.UTC)
+                        .thenReturn("UTC");
+
+                // Call the method under test
+                String result = MemosDateUtility.getFormattedDate(memo);
+
+                // Expected date format (converted to UTC)
+                assertEquals("2025-03-21T17:30:00Z", result);
+            }
+        }
+    }
+}
