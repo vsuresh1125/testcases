@@ -1,1 +1,79 @@
+package com.dfs.callcenter.card.memos.utilities;
 
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class MemosUtilityTest {
+
+    @Test
+    void testStringToBooleanWithYes() {
+        boolean result = MemosUtility.stringToBoolean("YES");
+        assertTrue(result, "Expected true for input 'YES'");
+    }
+
+    @Test
+    void testStringToBooleanWithY() {
+        boolean result = MemosUtility.stringToBoolean("Y");
+        assertTrue(result, "Expected true for input 'Y'");
+    }
+
+    @Test
+    void testStringToBooleanWithTrue() {
+        boolean result = MemosUtility.stringToBoolean("true");
+        assertTrue(result, "Expected true for input 'true'");
+    }
+
+    @Test
+    void testStringToBooleanWithMixedCaseTrue() {
+        boolean result = MemosUtility.stringToBoolean("TrUe");
+        assertTrue(result, "Expected true for mixed case input 'TrUe'");
+    }
+
+    @Test
+    void testStringToBooleanWithNo() {
+        boolean result = MemosUtility.stringToBoolean("NO");
+        assertFalse(result, "Expected false for input 'NO'");
+    }
+
+    @Test
+    void testStringToBooleanWithNull() {
+        boolean result = MemosUtility.stringToBoolean(null);
+        assertFalse(result, "Expected false for null input");
+    }
+
+    @Test
+    void testStringToBooleanWithEmptyString() {
+        boolean result = MemosUtility.stringToBoolean("");
+        assertFalse(result, "Expected false for empty string");
+    }
+
+    @Test
+    void testStringToBooleanWithRandomString() {
+        boolean result = MemosUtility.stringToBoolean("random");
+        assertFalse(result, "Expected false for unknown string");
+    }
+
+    @Test
+    void testBooleanToCharWithTrue() {
+        String result = MemosUtility.booleanToChar(true);
+        assertEquals("Y", result, "Expected 'Y' for true value");
+    }
+
+    @Test
+    void testBooleanToCharWithFalse() {
+        String result = MemosUtility.booleanToChar(false);
+        assertEquals("N", result, "Expected 'N' for false value");
+    }
+
+    @Test
+    void testBooleanToCharWithBoundaryTrue() {
+        String result = MemosUtility.booleanToChar(Boolean.TRUE);
+        assertEquals("Y", result, "Expected 'Y' for Boolean.TRUE");
+    }
+
+    @Test
+    void testBooleanToCharWithBoundaryFalse() {
+        String result = MemosUtility.booleanToChar(Boolean.FALSE);
+        assertEquals("N", result, "Expected 'N' for Boolean.FALSE");
+    }
+}
