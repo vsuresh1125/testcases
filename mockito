@@ -1,1 +1,51 @@
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.zaxxer.hikari.HikariDataSource;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+
+import javax.sql.DataSource;
+
+public class DataSourceConfigTest {
+
+    @Mock
+    private DataSourceProperties dataSourceProperties;
+
+    @InjectMocks
+    private DataSourceConfig dataSourceConfig;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testPcsoDataSourceProperties() {
+        // Act
+        DataSourceProperties properties = dataSourceConfig.pcsoDataSourceProperties();
+
+        // Assert
+        assertNotNull(properties);
+    }
+
+    @Test
+    public void testPcsoDataSource() {
+        // Arrange
+        DataSourceProperties mockProperties = mock(DataSourceProperties.class);
+        HikariDataSource mockDataSource = mock(HikariDataSource.class);
+
+        when(mockProperties.initializeDataSourceBuilder())
+                .thenReturn(mock(DataSourceProperties.DataSourceBuilder.class));
+
+        // Act
+        DataSource dataSource = dataSourceConfig.pcsoDataSource();
+
+        // Assert
+        assertNotNull(dataSource);
+    }
+}
