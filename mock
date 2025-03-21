@@ -1,1 +1,23 @@
 
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mockStatic;
+import org.mockito.MockedStatic;
+
+@Test
+void testGetFormattedDate_Success() {
+    MemoOutputVO memo = mock(MemoOutputVO.class);
+    when(memo.getMemoDate()).thenReturn("2025-03-21");
+    when(memo.getMemoTime()).thenReturn("17:30:00");
+
+    // Mock static methods using mockStatic
+    try (MockedStatic<Constants> constantsMock = mockStatic(Constants.class)) {
+        constantsMock.when(() -> Constants.ISO_8601_DATE_FORMAT).thenReturn("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        constantsMock.when(() -> Constants.UTC).thenReturn("UTC");
+
+        // Call the method under test
+        String result = MemosDateUtility.getFormattedDate(memo);
+
+        // Expected date format (converted to UTC)
+        assertEquals("2025-03-21T17:30:00Z", result);
+    }
+}
