@@ -21,3 +21,45 @@ public class MemosDateUtility {
         }
     }
 }
+------------------
+package com.example.demo.utility;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+public class MemosDateUtilityTest {
+
+    @Test
+    public void testGetFormattedDate() {
+        MemoOutputVO memo = new MemoOutputVO();
+        memo.setMemoDate("2025-03-23");
+        memo.setMemoTime("10:15:30");
+
+        String formattedDate = MemosDateUtility.getFormattedDate(memo, "dd-MM-yyyy HH:mm:ss", "Asia/Kolkata");
+        assertEquals("23-03-2025 10:15:30", formattedDate);
+    }
+
+    @Test
+    public void testGetFormattedDateWithInvalidDate() {
+        MemoOutputVO memo = new MemoOutputVO();
+        memo.setMemoDate("invalid-date");
+        memo.setMemoTime("10:15:30");
+
+        assertThrows(RuntimeException.class, () -> {
+            MemosDateUtility.getFormattedDate(memo, "dd-MM-yyyy HH:mm:ss", "Asia/Kolkata");
+        });
+    }
+}
+Explanation
+Annotations:
+
+@Test: This annotation is used to indicate that the method is a test method.
+Test Methods:
+
+testGetFormattedDate(): This test verifies that the getFormattedDate method correctly formats the date and time.
+testGetFormattedDateWithInvalidDate(): This test verifies that the getFormattedDate method throws a RuntimeException when an invalid date is provided.
+Assertions:
+
+assertEquals(expected, actual): This assertion checks if the expected value matches the actual value.
+assertThrows(expectedType, executable): This assertion checks if the executable throws the expected exception type.
