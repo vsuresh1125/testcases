@@ -1,1 +1,25 @@
 
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+@Test
+void testRetryFallbackForGetAccountNumberByAcctKeyAndSeqNum() throws Exception {
+    // Mock the exception to be thrown
+    Exception mockException = new Exception("Test Exception");
+
+    when(webClient.executePostSynchronous(any(), any(), eq(Object.class)))
+        .thenThrow(mockException)  // First attempt fails
+        .thenThrow(mockException)  // Second attempt fails
+        .thenThrow(mockException); // Third attempt fails (reaching max retries)
+
+    // Assert that the exception is thrown due to max retries
+    Exception thrownException = assertThrows(Exception.class, () -> {
+        lookupService.getAccountNumberByAcctKeyAndSeqNum(mockAccountIdentifiers);
+    });
+
+    // Verify the number of retries
+    verify(webClient, times(3)).executePostSynchronous(any(), any(), eq(Object.class));
+
+    // Assert error message
+    assertEquals("Test Exception", thrownException.getMessage());
+}
