@@ -1,1 +1,57 @@
+package com.dfs.callcenter.card.memos.connector;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.dfs.callcenter.card.memos.pcso.entity.QuickNote;
+import com.dfs.callcenter.card.memos.pcso.repo.PCSORepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+
+@ExtendWith(MockitoExtension.class)
+public class PCSORepositoryConnectorTest {
+
+    @Mock
+    private PCSORepository pcsoRepository;
+
+    @Mock
+    private Logger logger;
+
+    @InjectMocks
+    private PCSORepositoryConnector pcsoRepositoryConnector;
+
+    @Test
+    void testGetAllQuickNotes() {
+        // Arrange
+        String[] cardTypeNbr = {"000001"};
+        String subjectType = "C";
+        Integer subjectCode = 447;
+
+        List<QuickNote> mockQuickNotes = new ArrayList<>();
+        QuickNote quickNote = new QuickNote();
+        quickNote.setSubjectCode(447);
+        quickNote.setSubjectName("APR (Interest Rate)");
+        quickNote.setMemoText("APR Questions");
+        mockQuickNotes.add(quickNote);
+
+        when(pcsoRepository.findBySubjectType(cardTypeNbr, subjectType, subjectCode)).thenReturn(mockQuickNotes);
+
+        // Act
+        List<QuickNote> result = pcsoRepositoryConnector.getAllQuickNotes(cardTypeNbr, subjectType, subjectCode);
+
+        // Assert
+        assertEquals(1, result.size());
+        assertEquals("APR (Interest Rate)", result.get(0).getSubjectName());
+        assertEquals("APR Questions", result.get(0).getMemoText());
+
+        // Verify interactions
+        verify(pcsoRepository, times(1)).findBySubjectType(cardTypeNbr, subjectType, subjectCode);
+    }
+}
