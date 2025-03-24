@@ -1,1 +1,39 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 
+import static org.mockito.Mockito.*;
+
+public class AgentAuthEnvChangeEventListenerTest {
+
+    @Mock
+    private AgentAuthConfigManager configManager;
+
+    @Mock
+    private Logger logger;
+
+    @InjectMocks
+    private AgentAuthEnvChangeEventListener eventListener;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testOnRefresh_shouldReinitializeConfigManager() {
+        // Arrange
+        RefreshScopeRefreshedEvent event = mock(RefreshScopeRefreshedEvent.class);
+
+        // Act
+        eventListener.onRefresh(event);
+
+        // Assert
+        verify(logger, times(1)).info("re-initializing AgentAuthConfigManager due to RefreshScopeRefreshedEvent");
+        verify(configManager, times(1)).init();
+    }
+}
