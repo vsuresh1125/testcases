@@ -1,1 +1,88 @@
 
+import com.dfs.callcenter.card.memos.pcso.entity.QuickNote;
+import com.dfs.callcenter.card.memos.pcso.repo.PCSORepository;
+import com.dfs.callcenter.card.memos.pcso.connector.PCSORRepositoryConnector;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class PCSORRepositoryConnectorTest {
+
+    @InjectMocks
+    private PCSORRepositoryConnector pcsoRepositoryConnector;
+
+    @Mock
+    private PCSORepository pcsoRepository;
+
+    private QuickNote quickNote1;
+    private QuickNote quickNote2;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        quickNote1 = new QuickNote(
+                1L, 123, "Subject1", "Note 1", 5194,
+                "Memo Text 1", "Memo Name 1", 2, "100001", "SUB001"
+        );
+
+        quickNote2 = new QuickNote(
+                2L, 456, "Subject2", "Note 2", 5195,
+                "Memo Text 2", "Memo Name 2", 3, "100002", "SUB002"
+        );
+    }
+
+    @Test
+    void testGetAllQuickNotes_Success() {
+        // Arrange
+        String[] cardTypeNbr = {"123", "456"};
+        String subjectType = "Subject1";
+        Integer subjectCode = 100;
+
+        List<QuickNote> mockQuickNotes = Arrays.asList(quickNote1, quickNote2);
+        when(pcsoRepository.findBySubjectType(cardTypeNbr, subjectType, subjectCode))
+                .thenReturn(mockQuickNotes);
+
+        // Act
+        List<QuickNote> result = pcsoRepositoryConnector.getAllQuickNotes(cardTypeNbr, subjectType, subjectCode);
+
+        // Assert
+        assertEquals(2, result.size());
+        assertEquals("Note 1", result.get(0).getSubjectName());
+        assertEquals("Note 2", result.get(1).getSubjectName());
+
+        // Verify repository call
+        verify(pcsoRepository, times(1)).findBySubjectType(cardTypeNbr, subjectType, subjectCode);
+    }
+
+    @Test
+    void testGetAllQuickNotes_NoResults() {
+        // Arrange
+        String[] cardTypeNbr = {"789"};
+        String subjectType = "Unknown";
+        Integer subjectCode = 0;
+
+        when(pcsoRepository.findBySubjectType(cardTypeNbr, subjectType, subjectCode))
+                .thenReturn(Arrays.asList());
+
+        // Act
+        List<QuickNote> result = pcsoRepositoryConnector.getAllQuickNotes(cardTypeNbr, subjectType, subjectCode);
+
+        // Assert
+        assertEquals(0, result.size());
+
+        // Verify repository call
+        verify(pcsoRepository, times(1)).findBySubjectType(cardTypeNbr, subjectType, subjectCode);
+    }
+}
