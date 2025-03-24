@@ -1,1 +1,50 @@
 
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
+
+import java.net.URI;
+
+@ExtendWith(MockitoExtension.class)
+public class CardopsAcctNbrLookupServiceTest {
+
+    @Mock
+    private WebClient webClient;
+
+    @InjectMocks
+    private CardopsAcctNbrLookupService lookupService;
+
+    @Test
+    void testGetAccountNumberByAcctKeyAndSeqNum_Exception() {
+        // Arrange
+        AccountIdentifiersVO accountIdentifiersVO = new AccountIdentifiersVO();
+        accountIdentifiersVO.setAccountKey("12345");
+        accountIdentifiersVO.setSequenceNumber("001");
+
+        // Creating a valid RequestEntity to pass to exception
+        RequestEntity<Object> requestEntity = RequestEntity.get(URI.create("http://localhost")).build();
+
+        // Creating a ResponseEntity with a mock HTTP response
+        ResponseEntity<Object> responseEntity = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+
+        // Stubbing webClient to throw an exception with correct argument types
+        when(webClient.executePostSynchronous(any(), any(), eq(Object.class)))
+            .thenThrow(new WebResponseServerException(requestEntity, responseEntity, "Service Unavailable"));
+
+        // Act & Assert
+        WebResponseServerException exception = assertThrows(WebResponseServerException.class, () -> {
+            lookupService.getAccountNumberByAcctKeyAndSeqNum(accountIdentifiersVO);
+        });
+
+        assertEquals("Service Unavailable", exception.getMessage());
+    }
+}
