@@ -1,3 +1,11 @@
+..
+......// Create mock objects
+RequestEntity<Object> mockRequestEntity = mock(RequestEntity.class);
+ResponseEntity<Object> mockResponseEntity = mock(ResponseEntity.class);
+ServiceInfoKey mockServiceInfoKey = mock(ServiceInfoKey.class);
+
+when(webClient.executePostSynchronous(any(), any(), eq(Object.class)))
+    .thenThrow(new WebResponseServerException(mockRequestEntity, mockResponseEntity, mockServiceInfoKey));
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
