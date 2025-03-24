@@ -1,1 +1,45 @@
+import com.dfs.callcenter.card.platform.interceptors.models.AccountIdentifiersVO;
+import com.dfs.callcenter.card.memos.model.input.AccountIdentifiersInputRequest;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
+
+public class AccountIdentifiersInputRequestTest {
+
+    private AccountIdentifiersInputRequest request;
+    private AccountIdentifiersVO mockAccountIdentifiersVO;
+
+    @Before
+    public void setUp() {
+        // Initialize the class under test
+        request = new AccountIdentifiersInputRequest();
+
+        // Create a mock for AccountIdentifiersVO
+        mockAccountIdentifiersVO = mock(AccountIdentifiersVO.class);
+    }
+
+    @Test
+    public void testSetAccountIdentifiers() {
+        // Set mock value
+        request.setAccountIdentifiers(mockAccountIdentifiersVO);
+
+        // Verify that the value is set correctly
+        assertEquals(mockAccountIdentifiersVO, request.getAccountIdentifiers());
+    }
+
+    @Test
+    public void testGetAccountIdentifiers() {
+        // Use a mock to simulate data
+        when(mockAccountIdentifiersVO.toString()).thenReturn("MockAccountIdentifiersVO");
+
+        // Set the value
+        request.setAccountIdentifiers(mockAccountIdentifiersVO);
+
+        // Get the value and assert
+        AccountIdentifiersVO result = request.getAccountIdentifiers();
+        assertEquals("MockAccountIdentifiersVO", result.toString());
+    }
+}
