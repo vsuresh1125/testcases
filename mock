@@ -1,1 +1,79 @@
 
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
+
+@ExtendWith(MockitoExtension.class)
+class CardopsAcctNbrLookupImplTest {
+
+    @Mock
+    private CardopsWebClient webClient; // Mock the dependency
+
+    @InjectMocks
+    private CardopsAcctNbrLookupImpl lookupService; // Class under test
+
+    private AccountIdentifiersVO mockAccountIdentifiers;
+    private CardAccountNumberLookupOutputVO mockOutputVO;
+
+    @BeforeEach
+    void setUp() {
+        mockAccountIdentifiers = new AccountIdentifiersVO();
+        mockAccountIdentifiers.setAccountKey("testKey");
+        mockAccountIdentifiers.setSequenceNumber("123");
+
+        mockOutputVO = new CardAccountNumberLookupOutputVO();
+        mockOutputVO.setAccountNumber("9876543210");
+    }
+
+    @Test
+    void testGetAccountNumberByAcctKeyAndSeqNum_Success() throws Exception {
+        // Mock input
+        CardAccountNumberLookupInputVO inputVO = new CardAccountNumberLookupInputVO();
+        inputVO.setAcctKey(mockAccountIdentifiers.getAccountKey());
+        inputVO.setTrnsFrAcctSeqNbr(mockAccountIdentifiers.getSequenceNumber());
+
+        // Mock API response
+        ResponseEntity<Object> mockResponse = ResponseEntity.ok(mockOutputVO);
+        when(webClient.executePostSynchronous(any(), any(), eq(Object.class)))
+                .thenReturn(mockResponse);
+
+        // Act
+        CardAccountNumberLookupOutputVO result = lookupService.getAccountNumberByAcctKeyAndSeqNum(mockAccountIdentifiers);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("9876543210", result.getAccountNumber());
+        verify(webClient, times(1)).executePostSynchronous(any(), any(), eq(Object.class));
+    }
+
+    @Test
+    void testGetAccountNumberByAcctKeyAndSeqNum_Failure() {
+        // Mock API exception
+        when(webClient.executePostSynchronous(any(), any(), eq(Object.class)))
+                .thenThrow(new WebResponseServerException("Server error"));
+
+        // Act & Assert
+        assertThrows(WebResponseServerException.class, 
+                     () -> lookupService.getAccountNumberByAcctKeyAndSeqNum(mockAccountIdentifiers));
+
+        verify(webClient, times(1)).executePostSynchronous(any(), any(), eq(Object.class));
+    }
+
+    @Test
+    void testRetryFallbackForGetAccountNumberByAcctKeyAndSeqNum() throws Exception {
+        Exception mockException = new Exception("Test Exception");
+
+        // Act
+        CardAccountNumberLookupOutputVO result = lookupService.retryFallbackForGetAccountNumberByAcctKeyAndSeqNum(mockException);
+
+        // Assert
+        assertNull(result); // As the method doesn't return a valid object
+    }
+}
