@@ -1,1 +1,51 @@
 
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.dfs.callcenter.card.memos.rds.entity.CommonMemos;
+import com.dfs.callcenter.card.memos.rds.repo.RDSRepository;
+import com.dfs.callcenter.card.memos.connector.RDSRepositoryConnector;
+
+@ExtendWith(MockitoExtension.class)
+public class RDSRepositoryConnectorTest {
+
+    @Mock
+    private RDSRepository rdsRepository;  // Mock dependency
+
+    @InjectMocks
+    private RDSRepositoryConnector rdsRepositoryConnector; // Class under test
+
+    @BeforeEach
+    void setUp() {
+        // No manual initialization needed since @Mock and @InjectMocks handle it
+    }
+
+    @Test
+    void testGetAllCommonMemos() {
+        // Arrange: Create mock data
+        String prntBusOrgCode = "BUS123";
+        String[] cardTypeNbr = {"001", "002"};
+        List<CommonMemos> mockMemos = Arrays.asList(new CommonMemos(), new CommonMemos());
+
+        // Stub repository method
+        when(rdsRepository.findAllByPrntBusOrgCode(prntBusOrgCode, cardTypeNbr)).thenReturn(mockMemos);
+
+        // Act: Call the method
+        List<CommonMemos> result = rdsRepositoryConnector.getAllCommonMemos(prntBusOrgCode, cardTypeNbr);
+
+        // Assert: Verify behavior and expected result
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(rdsRepository, times(1)).findAllByPrntBusOrgCode(prntBusOrgCode, cardTypeNbr); // Verify interaction
+    }
+}
